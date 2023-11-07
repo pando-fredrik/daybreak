@@ -1,7 +1,7 @@
 set -e
 cargo build --release --target wasm32-unknown-unknown
 rm -rf generated && mkdir -p generated
-wasm-bindgen target/wasm32-unknown-unknown/debug/daybreak.wasm --out-dir generated --target web
+wasm-bindgen target/wasm32-unknown-unknown/release/daybreak.wasm --out-dir generated --target web
 cp daybreak.mp3 generated
 cp index.html generated
 (
