@@ -173,9 +173,12 @@ void main() {
                 debug_print!("Setting uniforms");
                 gl.uniform_1_f32(uniforms.utime.as_ref(), time_f32);
             }
-            debug_print!("Clearing");
-
-            gl.clear_color(0.0, 0.0, 0.0, 1.0);
+            debug_print!("Clearing {}", time_f32%18.0);
+            if (time_f32 > 6.2 && time_f32 < 6.3) || (time_f32 > 18.0 && time_f32 < 18.1) {
+                gl.clear_color(1.0, 1.0, 1.0, 1.0);
+            } else {
+                gl.clear_color(0.0, 0.0, 0.0, 1.0);
+            }
             gl.clear(glow::COLOR_BUFFER_BIT);
             gl.draw_arrays(glow::TRIANGLES, 0, 3);
         }))).await;
