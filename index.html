@@ -1,0 +1,51 @@
+<html>
+<head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
+    <style>
+        body {
+            background-color: #000
+        }
+
+        .startButton {
+            position: absolute;
+            left: 0px;
+            background-color: #000;
+            width: 100%;
+            height: 100%;
+            top: 0px;
+            color: #fff;
+        }
+
+        .startButtonHidden {
+            display: none;
+        }
+
+        #canvas {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+    </style>
+</head>
+<body>
+<canvas id="canvas" width="1280" height="720"></canvas>
+<script src="./daybreak.js"></script>
+<script type="module">
+  import init from "./daybreak.js";
+
+  console.log("Adding button");
+  let start = document.createElementNS(null, "div");
+
+  function bootstrap() {
+    start.className = 'startButtonHidden';
+    init();
+  }
+
+  start.className = 'startButton';
+  start.innerHTML = "Click when ready...";
+  start.addEventListener("click", bootstrap);
+  document.body.appendChild(start);
+</script>
+</body>
+</html>
