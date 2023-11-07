@@ -62,8 +62,12 @@ mod abstraction {
 mod abstraction {
     use super::*;
     use glutin::{self, ContextBuilder, ContextWrapper, event_loop::EventLoop, PossiblyCurrent};
-    use std::sync::{Arc, Mutex};
+    use std::sync::{Arc, mpsc, Mutex};
+    use std::thread::sleep;
+    use std::time::Duration;
+    use glutin::dpi::PhysicalSize;
     use glutin::window::Window;
+    use prokio::pinned::mpsc::unbounded;
 
     pub(crate) struct PlatformDataInner {
         pub(crate) event_loop: EventLoop<()>,
@@ -77,7 +81,8 @@ mod abstraction {
     }
     pub(crate) unsafe fn init() -> (Arc<Mutex<Context>>, &'static str, Option<PlatformDataInner>) {
         let event_loop = EventLoop::new();
-        let wb = glutin::window::WindowBuilder::new();
+        let wb = glutin::window::WindowBuilder::new().
+            with_inner_size(PhysicalSize::new(1920, 1080)).with_title("");
         let cb = ContextBuilder::new();
         let windowed_context = cb.build_windowed(wb, &event_loop).unwrap();
         let windowed_context = unsafe { windowed_context.make_current().unwrap() };
@@ -134,14 +139,20 @@ mod abstraction {
         use rodio::{Decoder, OutputStream};
 
         let inner_file = filename.to_string();
+        let (tx, rx) = mpsc::channel();
         thread::spawn(move || {
             let (_stream, stream_handle) = OutputStream::try_default().unwrap();
             let file = BufReader::new(File::open(inner_file).unwrap());
             let sink = rodio::Sink::try_new(&stream_handle).unwrap();
             let source = Decoder::new(file).unwrap();
             sink.append(source);
+            while sink.empty() {
+                sleep(Duration::from_millis(1));
+            }
+            tx.send(()).unwrap();
             sink.sleep_until_end();
         });
+        rx.recv().unwrap();
     }
 
     pub(crate) fn rt(f: impl Future<Output = ()> + 'static) {
