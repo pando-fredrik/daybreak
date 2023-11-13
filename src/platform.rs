@@ -9,7 +9,11 @@ mod abstraction {
     use prokio::time::sleep;
     use crate::debug_print;
     use super::*;
-
+    use wasm_bindgen::prelude::*;
+    use wasm_bindgen::JsCast;
+    use wasm_bindgen_futures::JsFuture;
+    use web_sys::{HtmlAudioElement};
+    
     pub type PlatformData = ();
 
     pub(crate) fn log(str: &str) {
@@ -48,9 +52,15 @@ mod abstraction {
 
     }
 
-    pub(crate) fn play_music(name: &str) {
-        let audio = web_sys::HtmlAudioElement::new_with_src(name);
-        let _ = audio.unwrap().play().unwrap();
+    pub async fn play_music(name: &str) -> Result<(), JsValue> {
+        let audio = HtmlAudioElement::new_with_src(name)
+            .map_err(|_| JsValue::from_str("Kunde inte skapa audioelement"))?;
+
+        let promise = audio.play().unwrap();
+        let _ = JsFuture::from(promise).await
+            .map_err(|_| JsValue::from_str("Kunde inte spela upp ljud"))?;
+
+        Ok(())
     }
 
     pub(crate) fn rt(f: impl Future<Output = ()> + 'static) {
@@ -64,7 +74,7 @@ mod abstraction {
     use glutin::{self, ContextBuilder, ContextWrapper, event_loop::EventLoop, PossiblyCurrent};
     use std::sync::{Arc, mpsc, Mutex};
     use std::thread::sleep;
-    use std::time::Duration;
+    use std::time::{Duration, Instant};
     use glutin::dpi::PhysicalSize;
     use glutin::window::Window;
     use prokio::pinned::mpsc::unbounded;
@@ -107,7 +117,7 @@ mod abstraction {
         let callback = draw_callback.clone();
         let shader_version = shader_version.to_string();
         ev_loop.run(move |event, _, control_flow| {
-            *control_flow = ControlFlow::Wait;
+            *control_flow = ControlFlow::WaitUntil(Instant::now());
             match event {
                 Event::LoopDestroyed => {}
                 Event::MainEventsCleared => {
@@ -132,7 +142,7 @@ mod abstraction {
         });
     }
 
-    pub(crate) fn play_music(filename: &str) {
+    pub(crate) async fn play_music(filename: &str) {
         use std::fs::File;
         use std::io::BufReader;
         use std::thread;
@@ -191,8 +201,8 @@ impl Platform {
             platform_data,
         }
     }
-    pub fn play_music(&self, filename: &str)  {
-        abstraction::play_music(filename);
+    pub async fn play_music(&self, filename: &str)  {
+        abstraction::play_music(filename).await;
     }
 
     pub async fn run(&mut self, draw_callback: Arc<impl Fn(&Context, &str) + 'static>) {

@@ -145,7 +145,6 @@ void main() {
             uniforms.utime = gl.get_uniform_location(program, "uTime");
             debug_print!("Done...");
         });
-        platform_lock.play_music("daybreak.mp3");
     }
     let local_platform = platform.clone();
     debug_print!("Setting up render loop");
@@ -156,6 +155,8 @@ void main() {
         debug_print!("Locking platform");
 
         let mut platform_lock = ap.lock().unwrap();
+        platform_lock.play_music("daybreak.mp3").await;
+
         debug_print!("Locked");
 
         let platform_uniforms = program_uniforms.clone();

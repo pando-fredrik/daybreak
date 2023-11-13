@@ -18,5 +18,6 @@ tokio = { version = "1.33.0", features = ["sync", "macros"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 web-sys = { version = "0.3", features = ["HtmlCanvasElement", "WebGl2RenderingContext", "Window", "console", "HtmlAudioElement"] }
-wasm-bindgen = { version = "0.2" }
+wasm-bindgen = { version = "0.2.88" }
 instant = { version = "0.1", features = ["wasm-bindgen"] }
+wasm-bindgen-futures = { version = "0.4.38" }
