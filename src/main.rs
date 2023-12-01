@@ -1,9 +1,14 @@
 mod platform;
+mod scheduler;
+mod effect;
+mod interval_thread;
 
 use std::sync::{Arc, Mutex};
 use glow::*;
 use crate::platform::Platform;
 use glam::{Mat4, Vec3};
+use crate::effect::Effect;
+use crate::scheduler::Scheduler;
 
 struct Uniforms {
     #[cfg(target_arch = "wasm32")]
@@ -22,6 +27,9 @@ impl Uniforms {
 
 fn main() {
     let platform = Arc::new(Mutex::new(Platform::new()));
+
+    let scheduler= Scheduler::new();
+  //  scheduler.add_effect(0.0, 10.0, Snowfall::new());
 
     let program = {
         let platform_lock = platform.lock().unwrap();

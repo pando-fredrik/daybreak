@@ -13,7 +13,7 @@ mod abstraction {
     use wasm_bindgen::JsCast;
     use wasm_bindgen_futures::JsFuture;
     use web_sys::{HtmlAudioElement};
-    
+
     pub type PlatformData = ();
 
     pub(crate) fn log(str: &str) {
@@ -21,6 +21,7 @@ mod abstraction {
         use wasm_bindgen::JsValue;
         web_sys::console::log_1(&JsValue::from_str(str));
     }
+
     pub fn init() -> (Arc<Mutex<Context>>, &'static str, PlatformData) {
         use wasm_bindgen::JsCast;
         let document = web_sys::window().unwrap().document().unwrap();
@@ -37,8 +38,6 @@ mod abstraction {
     pub(crate) async fn run(platform_data: &mut PlatformData, context: &Arc<Mutex<Context>>, draw_callback: Arc<impl Fn(&Context, &str) + 'static>, shader_version: &str)
     {
         use prokio::spawn_local;
-        use prokio::pinned::mpsc::unbounded;
-        let (rx, tx) = unbounded::<()>();
         let async_context = context.clone();
         let shader_vers = shader_version.to_string();
         spawn_local(async move {
@@ -49,7 +48,6 @@ mod abstraction {
                 sleep(Duration::from_millis(16)).await;
             }
         });
-
     }
 
     pub async fn play_music(name: &str) -> Result<(), JsValue> {
@@ -63,7 +61,7 @@ mod abstraction {
         Ok(())
     }
 
-    pub(crate) fn rt(f: impl Future<Output = ()> + 'static) {
+    pub(crate) fn rt(f: impl Future<Output=()> + 'static) {
         spawn_local(f);
     }
 }
@@ -77,7 +75,6 @@ mod abstraction {
     use std::time::{Duration, Instant};
     use glutin::dpi::PhysicalSize;
     use glutin::window::Window;
-    use prokio::pinned::mpsc::unbounded;
 
     pub(crate) struct PlatformDataInner {
         pub(crate) event_loop: EventLoop<()>,
@@ -89,6 +86,7 @@ mod abstraction {
     pub(crate) fn log(str: &str) {
         println!("{}", str);
     }
+
     pub(crate) unsafe fn init() -> (Arc<Mutex<Context>>, &'static str, Option<PlatformDataInner>) {
         let event_loop = EventLoop::new();
         let wb = glutin::window::WindowBuilder::new().
@@ -165,7 +163,7 @@ mod abstraction {
         rx.recv().unwrap();
     }
 
-    pub(crate) fn rt(f: impl Future<Output = ()> + 'static) {
+    pub(crate) fn rt(f: impl Future<Output=()> + 'static) {
         tokio::runtime::Builder::new_current_thread()
             .build()
             .unwrap()
@@ -187,13 +185,12 @@ macro_rules! debug_print {
 }
 
 impl Platform {
-
     pub fn log(str: &str) {
         abstraction::log(str);
     }
     pub fn new() -> Self {
         #[warn(unused_unsafe)]
-        let (context, shader_version, platform_data) = unsafe { abstraction::init() };
+            let (context, shader_version, platform_data) = unsafe { abstraction::init() };
 
         Self {
             context,
@@ -201,8 +198,8 @@ impl Platform {
             platform_data,
         }
     }
-    pub async fn play_music(&self, filename: &str)  {
-        abstraction::play_music(filename).await;
+    pub async fn play_music(&self, filename: &str) {
+        let _ = abstraction::play_music(filename).await;
     }
 
     pub async fn run(&mut self, draw_callback: Arc<impl Fn(&Context, &str) + 'static>) {
@@ -214,7 +211,7 @@ impl Platform {
         callback(&context, self.shader_version)
     }
 
-    pub fn spawn_rt(f: impl Future<Output = ()> + 'static) {
+    pub fn spawn_rt(f: impl Future<Output=()> + 'static) {
         abstraction::rt(f);
     }
 }
